@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="19px" height="12px" viewBox="0 0 19 12" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <!-- Generator: sketchtool 52.4 (67378) - http://www.bohemiancoding.com/sketch -->
+    <title>7D49C9C0-4138-4548-A000-33CF34A3F3F9</title>
+    <desc>Created with sketchtool.</desc>
+    <defs>
+        <path d="M16.1910192,6.15219033 L15.8911327,6.45828113 C15.6923959,6.66115828 15.6923959,6.99010847 15.8911327,7.19302892 L19.4505831,10.8056796 L3.50892914,10.8056796 C3.22787302,10.8056796 3,11.0382999 3,11.3252113 L3,11.7581545 C3,12.0450659 3.22787302,12.2776862 3.50892914,12.2776862 L19.4505831,12.2776862 L15.8911327,15.8903369 C15.6923959,16.093214 15.6923959,16.4221642 15.8911327,16.6250847 L16.1910192,16.9311755 C16.389756,17.1340526 16.711993,17.1340526 16.9107298,16.9311755 L21.8509474,11.9090351 C22.0496842,11.706158 22.0496842,11.3772078 21.8509474,11.1742874 L16.9107298,6.15219033 C16.711993,5.94926989 16.389756,5.94926989 16.1910192,6.15219033 Z" id="path-99"></path>
+    </defs>
+    <g id="Web-1367" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g id="Main-page" transform="translate(-674.000000, -833.000000)">
+            <g id="Echange-form" transform="translate(225.000000, 667.000000)">
+                <g id="Направление" transform="translate(445.000000, 158.000000)">
+                    <g id="Arrow" transform="translate(1.000000, 2.000000)">
+                        <rect id="Row" x="0" y="0" width="24" height="24"></rect>
+                        <mask id="mask-2" fill="white">
+                            <use xlink:href="#path-99"></use>
+                        </mask>
+                        <use id="Path" fill="#1C1D1E" xlink:href="#path-99"></use>
+                    </g>
+                </g>
+            </g>
+        </g>
+    </g>
+</svg>

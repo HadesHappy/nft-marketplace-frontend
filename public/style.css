@@ -1,0 +1,44 @@
+@font-face {
+  font-display: swap;
+  font-family: 'EastSeaDokdo-Regular';
+  src: url('./assets/fonts/EastSeaDokdo-Regular.ttf') format('truetype'); /* Safari, Android, iOS */
+}
+
+@font-face {
+  font-display: swap;
+  font-family: 'SpaceMono';
+  src: url('./assets/fonts/SpaceMono-Regular.ttf') format('truetype'); /* Safari, Android, iOS */
+}
+
+
+button:active,
+button:focus {
+  outline: none !important;
+}
+button::-moz-focus-inner {
+  border: 0 !important;
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  background-image: url('./assets/images/background_img.jpg') !important;
+
+  background-repeat: repeat-y !important;
+  background-size: cover !important;
+}
+
+#root {
+  position: relative;
+  min-height: 100%;
+}
+
+footer {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 100%;
+}

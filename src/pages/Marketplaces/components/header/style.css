@@ -1,0 +1,108 @@
+.banner {
+  background-image: url(../../../../assets/images/bg.png);
+  background-size: cover;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 52px 86px 52px;
+}
+
+.rabbit {
+  width: 206px;
+  height: 228px;
+  background-image: url(../../../../assets/images/rabbit.png);
+  background-size: cover;
+}
+
+.center-block {
+  width: max-content;
+  display: flex;
+  justify-content: center;
+}
+
+.title {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: 600px;
+}
+
+.title h1 {
+  font-family: EastSeaDokdo-Regular;
+  font-style: normal;
+  font-weight: normal;
+  font-size: 80px;
+  line-height: 70px;
+  margin: unset;
+  margin-bottom: 22px;
+  text-align: center;
+  text-transform: uppercase;
+  color: #ffffff;
+}
+
+.title p {
+  font-family: 'Space Mono', monospace;
+  font-style: normal;
+  font-weight: bold;
+  font-size: 20px;
+  line-height: 28px;
+  text-align: center;
+  color: #ffffff;
+}
+
+.right-list {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  width: 300px;
+}
+
+.right-list .item {
+  display: flex;
+  font-family: 'Inter', sans-serif;
+  color: white;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  margin-bottom: 12px;
+  font-size: 18px;
+}
+
+.right-list .item .check {
+  height: 24px;
+  width: 24px;
+  margin-right: 16px;
+}
+
+.left-block {
+  width: 300px;
+}
+
+@media (max-width: 1200px) {
+  .title h1 {
+    font-size: 58px;
+    margin-bottom: 12px;
+  }
+
+  .title p {
+    font-size: 14px;
+  }
+
+  .right-list .item {
+    font-size: 12px;
+  }
+}
+
+@media (max-width: 800px) {
+  .title {
+    max-width: unset;
+  }
+
+  .right-list {
+    display: none;
+  }
+
+  .left-block {
+    display: none;
+  }
+}
