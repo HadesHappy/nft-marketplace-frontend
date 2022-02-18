@@ -1,7 +1,7 @@
 import { Modal, ModalBody, ModalContent, ModalHeader, ModalOverlay, Text } from '@chakra-ui/react';
 import React from 'react';
 import Loading from '../../components/Loader/index';
-import { networkName } from '../../utils/constants/variables';
+import { networkName, rpcUrl } from '../../utils/constants/variables';
 
 const WrongNetworkModal = ({ isOpen }) => {
   return (
@@ -20,11 +20,15 @@ const WrongNetworkModal = ({ isOpen }) => {
             <br />
             Network Name: Moon Rabbit EVM
             <br />
-            New RPC URL: https://evm.moonrabbit.com
+            New RPC URL: {rpcUrl}
             <br />
             Chain ID: 1280
             <br />
             Currency Symbol: AAA
+            <br />
+            <br />
+            If you have issues connecting to wallet, minting or selling NFTs, open your MetaMask{' '}
+            <b> Settings >> "Advanced" >> "Reset Account"</b> and try again.
             <br />
           </ModalBody>
         </ModalContent>

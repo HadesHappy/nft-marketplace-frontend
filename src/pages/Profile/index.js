@@ -1,24 +1,30 @@
 import { Avatar, Badge, Box, Flex, Heading, Stat, StatLabel, StatNumber, Text } from '@chakra-ui/react';
 import React, { useEffect, useState } from 'react';
-import { useParams } from 'react-router';
+import { useHistory, useLocation, useParams } from 'react-router';
+import CollectionList from '../../components/CollectionList';
+import NFTFilter from '../../components/HeaderTokenList/filter';
 import TokenList from '../../components/TokenList/index';
+import * as RoutePaths from '../../utils/constants/routings';
 import UserContext from '../../utils/contexts/User';
 import { shortAddress } from '../../utils/helper';
 import useTokenProfileList from '../../utils/hooks/useTokenProfileList';
 import { InfoWrapper, StatWrapper } from '../NFT/styled-ui';
 
 const ProfilePage = () => {
+  let history = useHistory();
+  const location = useLocation();
   const { address } = useParams();
   const data = React.useContext(UserContext);
   const [pageNumber, setPageNumber] = useState(1);
   const [query, setQuery] = useState('');
   const resetPage = () => setPageNumber(1);
-  const { tokens, count, hasMore, loading, error } = useTokenProfileList({ query, pageNumber, address, resetPage });
+
   const isOwner = address === data.account.address;
+  const [nftType, setNftType] = useState('');
 
   const handleSortMenu = async (value) => {
-    setQuery(value);
     setPageNumber(1);
+    setQuery(value);
   };
 
   const listenMMAccount = React.useCallback(async () => {
@@ -29,11 +35,38 @@ const ProfilePage = () => {
     }
   }, []);
 
+  const handleTab = (type) => {
+    setTokens([]);
+    setPageNumber(1);
+    setNftType(type);
+    handleSortMenu('');
+    history.push({
+      pathname: `${RoutePaths.PROFILE_PAGE}/${address}`,
+      state: {
+        tabs: type,
+        page: 'profile',
+      },
+    });
+  };
+
+  const { tokens, count, hasMore, loading, error, setTokens } = useTokenProfileList({
+    query,
+    pageNumber,
+    address,
+    nftType,
+    resetPage,
+    handleTab,
+  });
+
   useEffect(() => {
+    handleTab('profile-nfts');
     listenMMAccount();
   }, []);
 
   if (isOwner === undefined) return false;
+
+  const activeTabCollections = location.state && location.state.tabs === 'profile-collections';
+  const activeTabNfts = location.state && location.state.tabs === 'profile-nfts';
 
   return (
     <>
@@ -66,7 +99,7 @@ const ProfilePage = () => {
 
           <StatWrapper>
             <Stat color="white">
-              <StatLabel>{isOwner ? 'You ' : 'User '} owns</StatLabel>
+              <StatLabel>{isOwner ? 'You own' : 'User owns'}</StatLabel>
               <Flex alignItems="baseline">
                 <StatNumber fontSize={24} fontWeight={600} lineHeight="32px" pr={2}>
                   {count}
@@ -79,21 +112,65 @@ const ProfilePage = () => {
           </StatWrapper>
         </Box>
       </Box>
-      <Box pt={{ base: 18, sm: 340, md: 240, lg: 120 }}>
-        <Box minH={'300px'} maxW="1536" margin="0 auto" pr={10} pl={10} pb={150}>
-          <TokenList
-            tokens={tokens}
-            handleSort={handleSortMenu}
-            loading={loading}
-            setPageNumber={setPageNumber}
-            hasMore={hasMore}
-            address={address}
-            error={error}
-            headerTitle={isOwner ? 'My NFTs' : "User's NFTs"}
-            headerVisability
-          />
+
+      {location.state && location.state.tabs === nftType && (
+        <Box pt={{ base: 18, sm: 340, md: 240, lg: 120 }}>
+          <Box minH={'300px'} maxW="1536" margin="0 auto" pr={10} pl={10} pb={150}>
+            <Flex justifyContent="space-between" alignItems="center" height="50px">
+              <Flex gridGap={4} pr={4}>
+                <Box onClick={() => handleTab('profile-nfts')} cursor="pointer">
+                  <Text
+                    color={activeTabNfts ? 'teal.300' : 'white'}
+                    fontSize={{ base: '18px', lg: '32px' }}
+                    fontWeight="bold"
+                    decoration={activeTabNfts ? 'underline' : 'none'}
+                    textUnderlineOffset={'6px'}
+                    textDecorationThickness="5px"
+                  >
+                    {isOwner ? 'My NFTs' : "User's NFTs"}
+                  </Text>
+                </Box>
+                <Box>
+                  <Text fontSize={{ base: '18px', lg: '32px' }} fontWeight="bold" color="white">
+                    /
+                  </Text>
+                </Box>
+                <Box onClick={() => handleTab('profile-collections')} cursor="pointer">
+                  <Text
+                    color={activeTabCollections ? 'teal.300' : 'white'}
+                    fontSize={{ base: '18px', lg: '32px' }}
+                    fontWeight="bold"
+                    decoration={activeTabCollections ? 'underline' : 'none'}
+                    textUnderlineOffset={'6px'}
+                    textDecorationThickness="5px"
+                  >
+                    {isOwner ? 'My Collections' : "User's Collections"}
+                  </Text>
+                </Box>
+              </Flex>
+              {location.state && location.state.tabs !== 'profile-collections' && (
+                <NFTFilter handleSort={handleSortMenu} isHomePage={true} />
+              )}
+            </Flex>
+            {location.state && location.state.tabs === 'profile-nfts' && (
+              <TokenList
+                tokens={tokens}
+                handleSort={handleSortMenu}
+                loading={loading}
+                setPageNumber={setPageNumber}
+                hasMore={hasMore}
+                address={address}
+                error={error}
+                headerVisability={false}
+              />
+            )}
+
+            {location.state && location.state.tabs === 'profile-collections' && (
+              <CollectionList collections={tokens} hasMore={hasMore} loading={loading} setPageNumber={setPageNumber} />
+            )}
+          </Box>
         </Box>
-      </Box>
+      )}
     </>
   );
 };

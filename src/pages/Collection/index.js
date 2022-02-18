@@ -39,7 +39,7 @@ const CollectionDetails = () => {
     avatarImg: AvatarSrc,
     backgraundImg:
       collection && !isRabbitCollection && collection.BackgroundURI !== ''
-        ? ipfsUrl + collection.BackgroundURI.replace('ipfs:/', '')
+        ? ipfsUrl + collection.BackgroundURI.replace('ipfs://', '')
         : {
             md: BackgroundSrc1280,
             xl: BackgroundSrc1920,
@@ -65,7 +65,7 @@ const CollectionDetails = () => {
               property="og:image"
               content={
                 !isRabbitCollection && collection.BackgroundURI !== ''
-                  ? ipfsUrl + collection.BackgroundURI.replace('ipfs:/', '')
+                  ? ipfsUrl + collection.BackgroundURI.replace('ipfs://', '')
                   : rabbitCollection.backgraundImg
               }
             />
@@ -79,7 +79,7 @@ const CollectionDetails = () => {
               bgPosition="center"
               bgImage={
                 !isRabbitCollection && collection.BackgroundURI !== ''
-                  ? ipfsUrl + collection.BackgroundURI.replace('ipfs:/', '')
+                  ? ipfsUrl + collection.BackgroundURI.replace('ipfs://', '')
                   : rabbitCollection.backgraundImg
               }
             ></Box>
@@ -88,7 +88,7 @@ const CollectionDetails = () => {
               display={'none'}
               src={
                 !isRabbitCollection && collection.BackgroundURI !== ''
-                  ? ipfsUrl + collection.BackgroundURI.replace('ipfs:/', '')
+                  ? ipfsUrl + collection.BackgroundURI.replace('ipfs://', '')
                   : rabbitCollection.backgraundImg
               }
               layout={'fill'}
@@ -103,7 +103,7 @@ const CollectionDetails = () => {
                       size="xl"
                       src={
                         !isRabbitCollection && collection.AvatarURI !== ''
-                          ? ipfsUrl + collection.AvatarURI.replace('ipfs:/', '')
+                          ? ipfsUrl + collection.AvatarURI.replace('ipfs://', '')
                           : rabbitCollection.avatarImg
                       }
                     />
@@ -116,7 +116,13 @@ const CollectionDetails = () => {
                           cursor={!isRabbitCollection ? 'pointer' : 'default'}
                           onClick={(e) =>
                             !isRabbitCollection
-                              ? history.push(`${RoutePaths.PROFILE_PAGE}/${tokens[0].CreatorAddress}`)
+                              ? history.push({
+                                  pathname: `${RoutePaths.PROFILE_PAGE}/${tokens[0].CreatorAddress}`,
+                                  state: {
+                                    tab: 'nfts',
+                                    page: 'home',
+                                  },
+                                })
                               : e.preventDefault()
                           }
                         >

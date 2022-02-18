@@ -1,4 +1,4 @@
-import { Button, Flex, Text } from '@chakra-ui/react';
+import { Button, chakra, Flex, Text } from '@chakra-ui/react';
 import React from 'react';
 import UserContext from '../../utils/contexts/User';
 
@@ -17,7 +17,7 @@ const EmptyTab = ({ text, buttonText, onClick }) => {
       textAlign="center"
     >
       <Text fontSize={36}>No items found</Text>
-      <Text>{text}</Text>
+      <chakra.span>{text}</chakra.span>
       {window.ethereum && data.account.address && (
         <Flex justifyContent="center">
           <Button colorScheme="teal" color="black" variant="with-shadow" onClick={onClick}>

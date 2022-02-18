@@ -5,10 +5,10 @@ import { useHistory } from 'react-router';
 import Web3 from 'web3';
 import Pagination from '../../ui-kit/Pagination/index';
 import * as RoutePaths from '../../utils/constants/routings';
-import { TOKEN_NAME } from '../../utils/constants/variables';
+import { rpcUrl, TOKEN_NAME } from '../../utils/constants/variables';
 import { shortAddress } from '../../utils/helper';
 
-const web3 = new Web3('https://evm.moonrabbit.com');
+const web3 = new Web3(rpcUrl);
 
 const BidsHistory = ({ bidsProps, account }) => {
   const [pagination, setPagination] = useState({

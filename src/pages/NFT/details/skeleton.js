@@ -1,4 +1,4 @@
-import { Box, Flex, Heading, Image, SimpleGrid, Skeleton, SkeletonText, Text } from '@chakra-ui/react';
+import { Box, chakra, Flex, Heading, Image, SimpleGrid, Skeleton, SkeletonText } from '@chakra-ui/react';
 import React from 'react';
 import { useLocation } from 'react-router';
 
@@ -28,9 +28,10 @@ const TokenDetailsSkeleton = ({ imageUrl }) => {
               <Skeleton height="24px" w="100px" />
             </Box>
           </Flex>
-          <Text color="gray.500" pt={4}>
+          <chakra.span>
+            color="gray.500" pt={4}>
             <SkeletonText skeletonHeight="20px" mt="4" noOfLines={4} spacing="3" />
-          </Text>
+          </chakra.span>
         </Flex>
       </SimpleGrid>
     </Box>

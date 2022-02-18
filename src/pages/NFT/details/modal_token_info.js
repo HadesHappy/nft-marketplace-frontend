@@ -24,10 +24,10 @@ const ModalTokenInfo = ({ isOpen, onClose, tokenInfo }) => {
                 onLoad={() => setImageLoaded(true)}
                 src={
                   location.state && location.state.imageUrl !== null
-                    ? encodeURI(location.state.imageUrl.replace('ipfs:/', ''))
+                    ? encodeURI(location.state.imageUrl.replace('ipfs://', ''))
                     : tokenInfo.cachedImageUrl !== ''
                     ? encodeURI(tokenInfo.cachedImageUrl)
-                    : encodeURI(tokenInfo.imageUrl.replace('ipfs:/', ''))
+                    : encodeURI(tokenInfo.imageUrl.replace('ipfs://', ''))
                 }
                 borderRadius="4px"
                 pb="40px"

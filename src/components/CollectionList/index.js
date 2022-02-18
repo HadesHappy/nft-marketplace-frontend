@@ -43,7 +43,15 @@ const CollectionList = ({ collections, loading, hasMore, setPageNumber }) => {
         <EmptyTab
           text={`Moon Rabbit finds your lack of NFTs disturbing.`}
           buttonText="Browse marketplace"
-          onClick={() => history.push(RoutePaths.HOME)}
+          onClick={() =>
+            history.push({
+              pathname: `${RoutePaths.HOME}`,
+              state: {
+                tab: 'nfts',
+                page: 'home',
+              },
+            })
+          }
         />
       )}
     </>

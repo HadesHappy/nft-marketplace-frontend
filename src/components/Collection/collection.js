@@ -23,7 +23,7 @@ const CollectionBoxInfo = ({ collectionInfo, isSelected, setFieldValueFunc }) =>
             w="28px"
             src={
               collectionInfo.imagePath !== ''
-                ? encodeURI(ipfsUrl + collectionInfo.imagePath.replace('ipfs:/', ''))
+                ? encodeURI(ipfsUrl + collectionInfo.imagePath.replace('ipfs://', ''))
                 : 'https://bit.ly/broken-link'
             }
           />

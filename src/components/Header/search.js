@@ -22,10 +22,22 @@ const SearchField = () => {
                 history.push(`${RoutePaths.COLLECTION}/${query}`);
                 break;
               case 'marketplace':
-                history.push(RoutePaths.HOME);
+                history.push({
+                  pathname: `${RoutePaths.HOME}`,
+                  state: {
+                    tab: 'nfts',
+                    page: 'home',
+                  },
+                });
                 break;
               case 'user':
-                history.push(`${RoutePaths.PROFILE_PAGE}/${query}`);
+                history.push({
+                  pathname: `${RoutePaths.PROFILE_PAGE}/${query}`,
+                  state: {
+                    tab: 'nfts',
+                    page: 'home',
+                  },
+                });
                 break;
               default:
                 break;

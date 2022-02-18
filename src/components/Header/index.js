@@ -2,6 +2,7 @@ import { AddIcon, ChevronDownIcon, CloseIcon, HamburgerIcon } from '@chakra-ui/i
 import {
   Box,
   Button,
+  chakra,
   Collapse,
   Flex,
   Grid,
@@ -15,11 +16,11 @@ import {
   Stack,
   Text,
   useBreakpointValue,
-  useColorModeValue,
   useDisclosure,
 } from '@chakra-ui/react';
 import React from 'react';
 import { NavLink as ReachLink, useHistory } from 'react-router-dom';
+import { useLocation } from 'react-router-dom/cjs/react-router-dom.min';
 import { ReactComponent as ConnectImg } from '../../assets/images/icons/connect.svg';
 import * as RoutePaths from '../../utils/constants/routings';
 import { TOKEN_NAME } from '../../utils/constants/variables';
@@ -63,9 +64,9 @@ export default function Header() {
             variant={'ghost'}
             aria-label={'Toggle Navigation'}
             bgColor="#282828"
-            _hover="#282828"
-            _focus="#282828"
-            _active="#282828"
+            // _hover="#282828"
+            // _focus="#282828"
+            // _active="#282828"
           />
         </Flex>
 
@@ -144,16 +145,16 @@ export default function Header() {
                   opacity="0.87"
                   color="white"
                 >
-                  <Text fontSize={'2xl'} fontWeight={700}>
+                  <chakra.span fontSize={'2xl'} fontWeight={700}>
                     Available balance
-                  </Text>
+                  </chakra.span>
 
                   <Grid gap={8} pt={4}>
                     <Flex justify="space-between">
-                      <Text pr={4}>Available {TOKEN_NAME} balance</Text>
-                      <Text fontWeight={600}>
+                      <chakra.span pr={4}>Available {TOKEN_NAME} balance</chakra.span>
+                      <chakra.span fontWeight={600}>
                         {data.account.ethBalance} {TOKEN_NAME}
-                      </Text>
+                      </chakra.span>
                     </Flex>
                     <Button
                       variant="outline"
@@ -164,6 +165,20 @@ export default function Header() {
                     >
                       Log out
                     </Button>
+                    {data.account.address && localStorage.getItem('jwtToken') && (
+                      <Button
+                        variant="outline"
+                        color="teal.200"
+                        colorScheme="black"
+                        onClick={() => {
+                          localStorage.removeItem('jwtToken');
+                          updateUserData();
+                          history.push('auth/login');
+                        }}
+                      >
+                        Log out (Admin)
+                      </Button>
+                    )}
                   </Grid>
                 </MenuList>
               </Menu>
@@ -181,11 +196,19 @@ export default function Header() {
 
 const DesktopNav = ({ address, history }) => {
   const linkHoverColor = 'teal.200';
-
+  const location = useLocation();
   return (
     <Stack direction={'row'} spacing={4}>
       {NAV_ITEMS.map((navItem) => {
         if (navItem.href === RoutePaths.PROFILE && !address) return false;
+        const pathname =
+          navItem.href === RoutePaths.PROFILE ? `${RoutePaths.PROFILE_PAGE}/${address}` : navItem.href ?? '#';
+        const state = RoutePaths.HOME
+          ? {
+              tab: 'nfts',
+              page: 'home',
+            }
+          : {};
 
         return (
           <Menu isLazy key={navItem.label}>
@@ -194,8 +217,8 @@ const DesktopNav = ({ address, history }) => {
               exact
               p={2}
               to={{
-                pathname:
-                  navItem.href === RoutePaths.PROFILE ? `${RoutePaths.PROFILE_PAGE}/${address}` : navItem.href ?? '#',
+                pathname,
+                state,
               }}
               fontSize={'sm'}
               fontWeight={600}
@@ -224,6 +247,7 @@ const MobileNav = ({ address }) => {
     <Stack bg="#282828" p={4} display={{ md: 'none' }}>
       {NAV_ITEMS.map((navItem) => {
         if (navItem.href === RoutePaths.PROFILE && !address) return false;
+
         return <MobileNavItem key={navItem.label} {...navItem} address={address} href={navItem.href} />;
       })}
     </Stack>
@@ -232,13 +256,25 @@ const MobileNav = ({ address }) => {
 
 const MobileNavItem = ({ label, target, children, href, address }: NavItem) => {
   const { isOpen, onToggle } = useDisclosure();
+  const pathname = href === RoutePaths.PROFILE ? `${RoutePaths.PROFILE_PAGE}/${address}` : href ?? '#';
+  const state = RoutePaths.HOME
+    ? {
+        tab: 'nfts',
+        page: 'home',
+      }
+    : {};
+
+  if (href === RoutePaths.PROFILE && !address) return false;
   return (
     <Stack spacing={4} onClick={children && onToggle}>
       <Flex
         py={2}
         as={ReachLink}
         target={target}
-        to={{ pathname: href === RoutePaths.PROFILE ? `${RoutePaths.PROFILE_PAGE}/${address}` : href }}
+        to={{
+          pathname,
+          state,
+        }}
         justify={'space-between'}
         align={'center'}
         _hover={{
@@ -260,14 +296,7 @@ const MobileNavItem = ({ label, target, children, href, address }: NavItem) => {
       </Flex>
 
       <Collapse in={isOpen} animateOpacity style={{ marginTop: '0!important' }}>
-        <Stack
-          mt={2}
-          pl={4}
-          borderLeft={1}
-          borderStyle={'solid'}
-          borderColor={useColorModeValue('gray.200', 'gray.700')}
-          align={'start'}
-        >
+        <Stack mt={2} pl={4} borderLeft={1} borderStyle={'solid'} borderColor="gray.700" align={'start'}>
           {children &&
             children.map((child) => (
               <Link key={child.label} py={2} href={child.href}>
@@ -293,6 +322,11 @@ const NAV_ITEMS: Array<NavItem> = [
     href: RoutePaths.HOME,
     target: '_self',
   },
+  // {
+  //   label: 'Explore',
+  //   href: RoutePaths.EXPLORE,
+  //   target: '_self',
+  // },
   {
     label: 'My profile',
     href: RoutePaths.PROFILE,

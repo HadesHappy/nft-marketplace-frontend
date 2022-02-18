@@ -220,7 +220,7 @@ export const getOwnerAddress = async ({ collectionAddress, tokenId }) => {
 
 export const stopListing = async ({ collectionAddress, tokenId, address, setError, cb }) => {
   const web3 = new Web3(window.ethereum);
-  console.log('collectionAddress, tokenId, address', collectionAddress, tokenId, address);
+
   if (web3) {
     const marketplaceContract = new web3.eth.Contract(getContractAbi().marketplaceJson.abi, marketplaceContractAddress);
 
@@ -232,5 +232,63 @@ export const stopListing = async ({ collectionAddress, tokenId, address, setErro
       })
       .on('error', (error) => setError(error.message));
     return address;
+  }
+};
+
+export const getNFTOwners = async ({ collectionAddress, tokenId, cb }) => {
+  const web3 = new Web3(window.ethereum);
+  if (web3) {
+    const marketplaceContract = new web3.eth.Contract(getContractAbi().marketplaceJson.abi, marketplaceContractAddress);
+
+    const filterParams = {
+      collection: collectionAddress,
+      tokenId: tokenId,
+    };
+
+    return await marketplaceContract.getPastEvents('NFTPurchased', {
+      filter: filterParams,
+      fromBlock: 0,
+      toBlock: 'latest',
+    });
+  }
+};
+
+export const getNFTClaimed = async ({ collectionAddress, tokenId, cb }) => {
+  const web3 = new Web3(window.ethereum);
+  if (web3) {
+    const marketplaceContract = new web3.eth.Contract(getContractAbi().marketplaceJson.abi, marketplaceContractAddress);
+
+    const filterParams = {
+      collection: collectionAddress,
+      tokenId: tokenId,
+    };
+
+    const result = await marketplaceContract.getPastEvents('NFTClaimed', {
+      filter: filterParams,
+      fromBlock: 0,
+      toBlock: 'latest',
+    });
+
+    return result;
+  }
+};
+
+export const getExternalNFTOwner = async ({ collectionAddress, tokenId, cb }) => {
+  const web3 = new Web3(window.ethereum);
+  if (web3) {
+    const marketplaceContract = new web3.eth.Contract(getContractAbi().marketplaceJson.abi, marketplaceContractAddress);
+
+    const filterParams = {
+      collection: collectionAddress,
+      tokenId: tokenId,
+    };
+
+    const result = await marketplaceContract.getPastEvents('Transfer', {
+      filter: filterParams,
+      fromBlock: 0,
+      toBlock: 'latest',
+    });
+
+    return result;
   }
 };

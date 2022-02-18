@@ -2,6 +2,7 @@ import { AddIcon } from '@chakra-ui/icons';
 import {
   Box,
   Button,
+  chakra,
   Checkbox,
   Container,
   Flex,
@@ -27,11 +28,9 @@ import { Field, Formik } from 'formik';
 import moment from 'moment';
 import React, { useEffect, useState } from 'react';
 import { useHistory } from 'react-router-dom';
-import { ReactComponent as CloseImg } from '../../../assets/images/icons/close.svg';
 import CollectionBoxInfo from '../../../components/Collection/collection';
 import AlertMessage from '../../../ui-kit/AlertMessage/index';
 import CustomAddonInput from '../../../ui-kit/CustomField/AddonInput';
-import CustomFileInput from '../../../ui-kit/CustomField/FileInput';
 import CustomTextarea from '../../../ui-kit/CustomField/Textarea';
 import DatePickerField from '../../../ui-kit/DatePicker';
 import Error from '../../../ui-kit/Error/index';
@@ -40,19 +39,19 @@ import * as RoutePaths from '../../../utils/constants/routings';
 import { AUCTION_PRICE_NFT, FIX_PRICE_NFT, TOKEN_NAME } from '../../../utils/constants/variables';
 import UserContext from '../../../utils/contexts/User';
 import { createToken } from '../../../utils/contractsApi/token';
-import { ipfs, prepareFileToIpfs } from '../../../utils/ipfs';
+import { ipfs, readFileAsync } from '../../../utils/ipfs';
 import { getMarketplaceCollections } from '../../../utils/requestApi/marketplace';
 import { isNftAvailable } from '../../../utils/requestApi/token';
 import CreateCollectionModal from '../../Collection/create';
-import { FormGrid, UploadedCoverImageFullSize } from '../../Marketplaces/styled-ui';
+import { FormGrid } from '../../Marketplaces/styled-ui';
 import { StatWrapper } from '../styled-ui';
 import { NftSchema } from '../validation';
+import NFTField from './nftField';
 const nftTypes = [FIX_PRICE_NFT, AUCTION_PRICE_NFT];
 
 const CreateNft = () => {
   let history = useHistory();
   const data = React.useContext(UserContext);
-  const [nftImageBuffer, setNftImageBuffer] = useState(null);
   const [formData, setFormData] = useState('');
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [tabIndex, setTabIndex] = useState(0);
@@ -73,18 +72,35 @@ const CreateNft = () => {
     setMarketplaceCollections([...marketplaceCollections, collection]);
   };
 
-  const addData = async (buffer) => {
-    const basename = formData.values.nftImage[0].name;
-    const ipfsPath = '/nft/' + basename;
-    const { cid: assetCid } = await ipfs.add({ path: ipfsPath, content: buffer });
+  const addData = async () => {
+    const basenameNFT = formData.values.nftImage[0].name.replace(/[^a-zA-Z0-9.]+/g, '');
+    let contentNFTBuffer = await readFileAsync(formData.values.nftImage[0]);
+    const { cid: assetNFTCid } = await ipfs.add({ path: '/nft/' + basenameNFT, content: contentNFTBuffer });
     const { name, description } = formData.values;
+    let jsonData;
 
-    const jsonData = JSON.stringify({
-      description,
-      external_url: 'https://nft.moonrabbit.com',
-      image: `ipfs://${assetCid}/${basename}`,
-      name,
-    });
+    if (formData.values.nftImage[0].type === 'video/mp4') {
+      const coverBasename = formData.values.nftCover[0].name.replace(/[^a-zA-Z0-9.]+/g, '');
+      let contentCoverBuffer = await readFileAsync(formData.values.nftCover[0]);
+      const { cid: assetCoverCid } = await ipfs.add({ path: '/nft/' + coverBasename, content: contentCoverBuffer });
+
+      jsonData = JSON.stringify({
+        description,
+        external_url: 'https://nft.moonrabbit.com',
+        image: `ipfs://${assetCoverCid}/${coverBasename}`,
+        animation_url: `ipfs://${assetNFTCid}/${basenameNFT}`,
+        name,
+        attributes: [],
+      });
+    } else {
+      jsonData = JSON.stringify({
+        description,
+        external_url: 'https://nft.moonrabbit.com',
+        image: `ipfs://${assetNFTCid}/${basenameNFT}`,
+        name,
+        attributes: [],
+      });
+    }
 
     const { cid: metadataCid } = await ipfs.add({ path: '/nft/metadata.json', content: jsonData });
     const metadataURI = metadataCid + '/metadata.json';
@@ -131,15 +147,7 @@ const CreateNft = () => {
   };
 
   useEffect(() => {
-    if (nftImageBuffer) {
-      addData(nftImageBuffer);
-    }
-  }, [nftImageBuffer]);
-
-  useEffect(() => {
-    if (formData !== '' && formData.values.nftImage[0]) {
-      prepareFileToIpfs(formData.values.nftImage[0], setNftImageBuffer);
-    }
+    if (formData !== '') addData();
   }, [formData]);
 
   useEffect(() => {
@@ -172,7 +180,10 @@ const CreateNft = () => {
     description: '',
     price: '',
     nftImage: '',
+    nftCover: '',
     isPublishNow: true,
+    isVideoNFT: false,
+    nftError: false,
     collectionAddress: '',
     startDate: moment().toDate(),
     endDate: moment().add(1, 'h').toDate(),
@@ -192,40 +203,29 @@ const CreateNft = () => {
             <Formik
               initialValues={initialValues}
               validationSchema={NftSchema}
-              validateOnChange={false}
+              validateOnChange={true}
               onSubmit={onSubmitHandler}
             >
-              {({ values, errors, touched, handleChange, handleBlur, handleSubmit, isSubmitting, setFieldValue }) => (
+              {({
+                values,
+                errors,
+                touched,
+                handleChange,
+                handleBlur,
+                handleSubmit,
+                isSubmitting,
+                setFieldValue,
+                setFieldError,
+                onChange,
+              }) => (
                 <FormGrid onSubmit={handleSubmit}>
-                  {!values.nftImage[0] ? (
-                    <Box>
-                      <Field
-                        id="nftImage"
-                        name="nftImage"
-                        component={CustomFileInput}
-                        type="text"
-                        accept=".png, .jpg, .jpeg, .gif, .webp"
-                        label="Upload file"
-                      />
-                      {errors.nftImage && touched.nftImage && <Error>{errors.nftImage}</Error>}
-                    </Box>
-                  ) : (
-                    <Box>
-                      <Text mb={2}> Upload file</Text>
-                      <Flex w="full" h="full" pb={6} flexDirection="column" alignContent="center">
-                        <Box alignSelf="center" pb={2}>
-                          <UploadedCoverImageFullSize src={URL.createObjectURL(values.nftImage[0])} borderRadius={4} />
-                        </Box>
-
-                        <Flex color="gray.900" justifyContent="space-between" alignItems="center">
-                          <Box color="white" pr={4}>
-                            {values.nftImage[0].name}
-                          </Box>
-                          <CloseImg onClick={() => setFieldValue('nftImage', '')} />
-                        </Flex>
-                      </Flex>
-                    </Box>
-                  )}
+                  <NFTField
+                    values={values}
+                    setFieldValue={setFieldValue}
+                    errors={errors}
+                    touched={touched}
+                    setFieldError={setFieldError}
+                  />
                   <Box>
                     <Text pb={2}>Choose collection</Text>
                     <Flex flexDirection="row" flexFlow="row wrap" gridGap={6}>
@@ -421,9 +421,9 @@ const CreateNft = () => {
                         <Box color="teal.100" />
                       </SliderThumb>
                     </Slider>
-                    <Text>
+                    <chakra.span>
                       Royalty <b>{values.royalty}%</b>
-                    </Text>
+                    </chakra.span>
                   </Box>
 
                   {values.isPublishNow && (
@@ -473,4 +473,4 @@ const CreateNft = () => {
   );
 };
 
-export default CreateNft;
+export default React.memo(CreateNft);

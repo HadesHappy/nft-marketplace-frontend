@@ -20,24 +20,24 @@ import CustomTextarea from '../../ui-kit/CustomField/Textarea';
 import Error from '../../ui-kit/Error/index';
 import CustomInput from '../../ui-kit/Input/index';
 import { createCollection } from '../../utils/contractsApi/collection';
-import { getFile, ipfs, prepareFileToIpfs } from '../../utils/ipfs';
+import { getFile, ipfs, readFileAsync } from '../../utils/ipfs';
 import { FormGrid, UploadedCoverImageFullSize } from '../Marketplaces/styled-ui';
 import CollectionSchema from './validation';
 
 const CreateCollectionModal = ({ data, isOpen, onClose, fieldName, setFieldValue, addCollectionToArray }) => {
   const [error, setError] = useState();
-  const [collectionImageBuffer, setCollectionImageBuffer] = useState(null);
-  const [collectionBgImageBuffer, setCollectionBgImageBuffer] = useState(null);
+
   const [formData, setFormData] = useState('');
 
-  const create = async (collectionImage, collectionBgImage) => {
-    const avatarImgName = formData.values.collectionImage[0].name;
-    const ipfsPathAvatarImg = '/nft/' + avatarImgName;
-    const bgImgName = formData.values.collectionBgImage[0].name;
-    const ipfsPathBgImg = '/nft/' + bgImgName;
+  const create = async () => {
+    const avatarImgName = formData.values.collectionImage[0].name.replace(/[^a-zA-Z0-9.]+/g, '');
+    const bgImgName = formData.values.collectionBgImage[0].name.replace(/[^a-zA-Z0-9.]+/g, '');
 
-    const { cid: assetAvatarCid } = await ipfs.add({ path: ipfsPathAvatarImg, content: collectionImage });
-    const { cid: assetBgCid } = await ipfs.add({ path: ipfsPathBgImg, content: collectionBgImage });
+    let contenAvatarBuffer = await readFileAsync(formData.values.collectionImage[0]);
+    let contenBgBuffer = await readFileAsync(formData.values.collectionBgImage[0]);
+
+    const { cid: assetAvatarCid } = await ipfs.add({ path: '/nft/' + avatarImgName, content: contenAvatarBuffer });
+    const { cid: assetBgCid } = await ipfs.add({ path: '/nft/' + bgImgName, content: contenBgBuffer });
 
     const { collectionName, collectionDescription, symbol } = formData.values;
     const jsonData = JSON.stringify({
@@ -80,16 +80,7 @@ const CreateCollectionModal = ({ data, isOpen, onClose, fieldName, setFieldValue
   };
 
   useEffect(() => {
-    if (collectionImageBuffer && collectionBgImageBuffer) {
-      create(collectionImageBuffer, collectionBgImageBuffer);
-    }
-  }, [collectionImageBuffer, collectionBgImageBuffer]);
-
-  useEffect(() => {
-    if (formData && formData.values.collectionImage[0] && formData.values.collectionBgImage[0]) {
-      prepareFileToIpfs(formData.values.collectionImage[0], setCollectionImageBuffer);
-      prepareFileToIpfs(formData.values.collectionBgImage[0], setCollectionBgImageBuffer);
-    }
+    if (formData !== '') create();
   }, [formData]);
 
   const initialValues = {
@@ -98,7 +89,7 @@ const CreateCollectionModal = ({ data, isOpen, onClose, fieldName, setFieldValue
     collectionImage: '',
     collectionBgImage: '',
     symbol: '',
-    shortUrl: 'xgalery.com/',
+    shortUrl: '',
   };
 
   const onSubmitHandler = React.useCallback((values, actions) => {
@@ -148,6 +139,7 @@ const CreateCollectionModal = ({ data, isOpen, onClose, fieldName, setFieldValue
                                     label="Upload background"
                                     actionText="Click to upload background image"
                                     maxFiles="1"
+                                    labelTypes="JPG, JPEG, PNG, GIF, WEBP. Max 100mb."
                                   />
                                   {errors.collectionBgImage && touched.collectionBgImage && (
                                     <Error>{errors.collectionBgImage}</Error>
@@ -187,6 +179,7 @@ const CreateCollectionModal = ({ data, isOpen, onClose, fieldName, setFieldValue
                                     type="text"
                                     accept=".png, .jpg, .jpeg, .gif, .webp"
                                     label="Upload avatar"
+                                    labelTypes="JPG, JPEG, PNG, GIF, WEBP. Max 100mb."
                                     actionText="Click to upload avatar"
                                     maxFiles="1"
                                   />
@@ -277,7 +270,8 @@ const CreateCollectionModal = ({ data, isOpen, onClose, fieldName, setFieldValue
                               variant="solid"
                               bg="teal.200"
                               size="lg"
-                              colorScheme="teal.200"
+                              colorScheme="black"
+                              color="black"
                               isLoading={isSubmitting}
                               loadingText="Submitting"
                               mb={20}

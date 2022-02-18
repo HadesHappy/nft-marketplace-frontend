@@ -1,17 +1,21 @@
+import { StarIcon } from '@chakra-ui/icons';
 import { Box, Button, Center, Flex, Heading, Image, Skeleton, Spacer, Stack, Text } from '@chakra-ui/react';
 import React, { useState } from 'react';
 import { useHistory, useLocation } from 'react-router';
 import Web3 from 'web3';
 import DateTimer from '../../ui-kit/DateTimer';
 import * as RoutePaths from '../../utils/constants/routings';
-import { AUCTION_TYPE, marketplaceContractAddress, TOKEN_NAME } from '../../utils/constants/variables';
+import { AUCTION_TYPE, marketplaceContractAddress, rpcUrl, TOKEN_NAME } from '../../utils/constants/variables';
 import { ipfsUrl } from '../../utils/ipfs';
+import { addToFavoriteNFT } from '../../utils/requestApi/token';
 import OnSale from './OnSale';
-export default function Token({ token, loading }) {
+const Token = ({ token, loading }) => {
   const history = useHistory();
   let location = useLocation();
   const [imageLoaded, setImageLoaded] = useState(false);
-  const web3 = new Web3('https://evm.moonrabbit.com');
+  const [favoriteNFT, setFavoriteNFT] = useState(token ? token.IsExplore : false);
+
+  const web3 = new Web3(rpcUrl);
 
   const handleClickToken = () => {
     history.push({
@@ -19,9 +23,19 @@ export default function Token({ token, loading }) {
       state: {
         imageUrl: token.CachedImage
           ? encodeURI(token.CachedImage)
-          : encodeURI(`${ipfsUrl}${token.ImageURI.replace('ipfs:/', '')}`),
+          : encodeURI(`${ipfsUrl}${token.ImageURI.replace('ipfs://', '')}`),
       },
     });
+  };
+
+  const handleAddToFavoriteToken = (tokenId, collectionAddress, explore) => {
+    addToFavoriteNFT({ tokenId, collectionAddress, explore }).then((data) => {
+      setFavoriteNFT(!favoriteNFT);
+    });
+    // .catch((e) => {
+    //   localStorage.removeItem('jwtToken');
+    //   history.push('auth/login');
+    // });
   };
 
   return (
@@ -79,47 +93,51 @@ export default function Token({ token, loading }) {
               _hover={{
                 boxShadow: '2xl',
               }}
-              onClick={() => handleClickToken()}
-              cursor="pointer"
+              // onClick={() => handleClickToken()}
+              // cursor="pointer"
             >
               <Stack>
-                {!imageLoaded && <Skeleton height={{ base: '300px', sm: '300px', lg: '400px' }} mW="400px" pt={2} />}
-                <Box
-                  position=" relative"
-                  height={{ sm: '300px', lg: '400px' }}
-                  mW="400px"
-                  display={imageLoaded ? 'flex' : 'none'}
-                  alignItems="center"
-                  justifyContent="center"
-                >
+                {!imageLoaded && (
+                  <Skeleton height={{ base: '300px', sm: '300px', lg: '400px' }} /*mW="400px"*/ pt={2} />
+                )}
+                <Box onClick={() => handleClickToken()} cursor="pointer">
                   <Box
-                    display="flex"
-                    flexFlow="column"
+                    position=" relative"
+                    height={{ sm: '300px', lg: '400px' }}
+                    // mW="400px"
+                    display={imageLoaded ? 'flex' : 'none'}
                     alignItems="center"
-                    width="100%"
-                    height="100%"
                     justifyContent="center"
                   >
-                    <Image
-                      height="auto"
-                      maxHeight="100%"
-                      maxWidth="100%"
-                      src={
-                        token.CachedImage
-                          ? encodeURI(token.CachedImage)
-                          : encodeURI(`${ipfsUrl}${token.ImageURI.replace('ipfs:/', '')}`)
-                      }
-                      onLoad={() => setImageLoaded(true)}
-                    />
+                    <Box
+                      display="flex"
+                      flexFlow="column"
+                      alignItems="center"
+                      width="100%"
+                      height="100%"
+                      justifyContent="center"
+                    >
+                      <Image
+                        height="auto"
+                        maxHeight="100%"
+                        maxWidth="100%"
+                        src={
+                          token.CachedImage
+                            ? encodeURI(token.CachedImage)
+                            : encodeURI(`${ipfsUrl}${token.ImageURI.replace('ipfs://', '')}`)
+                        }
+                        onLoad={() => setImageLoaded(true)}
+                      />
+                    </Box>
                   </Box>
-                </Box>
 
-                <Heading fontSize={'2xl'} fontFamily={'body'} pt={8}>
-                  {token.Name}
-                </Heading>
-                <Text color={'gray.500'} overflow="hidden" whiteSpace="nowrap" textOverflow="ellipsis" minH={4}>
-                  {token.Description}
-                </Text>
+                  <Heading fontSize={'2xl'} fontFamily={'body'} pt={8}>
+                    {token.Name}
+                  </Heading>
+                  <Text color={'gray.500'} overflow="hidden" whiteSpace="nowrap" textOverflow="ellipsis" minH={4}>
+                    {token.Description}
+                  </Text>
+                </Box>
               </Stack>
               <Stack mt={6} direction={'row'} spacing={4} align={'center'} justifyContent="space-between" height={12}>
                 {token.MinimalBid !== '0' ? (
@@ -132,9 +150,26 @@ export default function Token({ token, loading }) {
                 ) : (
                   <Box></Box>
                 )}
-                <Button variant="outline" colorScheme="black" color="teal.200" onClick={() => handleClickToken()}>
-                  Open
-                </Button>
+                <Box>
+                  {localStorage.getItem('jwtToken') && (
+                    <Button
+                      _hover={{ bg: 'transparent' }}
+                      mr="4px"
+                      variant="outline"
+                      colorScheme="yellow"
+                      color="yellow.400"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        handleAddToFavoriteToken(token.Id, token.CollectionId, favoriteNFT);
+                      }}
+                    >
+                      <StarIcon color={favoriteNFT ? 'yellow.400' : '#ccc'} />
+                    </Button>
+                  )}
+                  <Button variant="outline" colorScheme="black" color="teal.200" onClick={() => handleClickToken()}>
+                    Open
+                  </Button>
+                </Box>
                 )}
               </Stack>
             </Box>
@@ -143,4 +178,6 @@ export default function Token({ token, loading }) {
       )}
     </>
   );
-}
+};
+
+export default Token;

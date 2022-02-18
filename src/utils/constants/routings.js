@@ -13,3 +13,6 @@ export const PROFILE = '/profile/:address';
 export const COLLECTION = '/collection';
 export const COLLECTION_DETAILS = '/collection/:address';
 export const CREATE_COLLECTION = '/collection/create';
+
+export const EXPLORE = '/explore';
+export const AUTH_LOGIN = '/auth/login';

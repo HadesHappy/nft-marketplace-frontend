@@ -1,26 +1,24 @@
 import {
   Box,
   Button,
+  chakra,
   Flex,
   Heading,
-  Image,
   SimpleGrid,
-  Skeleton,
   Stat,
   StatLabel,
   StatNumber,
   Text,
-  useDisclosure,
+  useDisclosure
 } from '@chakra-ui/react';
 import { useToast } from '@chakra-ui/toast';
 import { Field, Form, Formik } from 'formik';
 import moment from 'moment';
 import React, { useEffect, useState } from 'react';
 import { Helmet } from 'react-helmet';
-import { useHistory, useLocation, useParams } from 'react-router';
+import { useHistory, useParams } from 'react-router';
 import Web3 from 'web3';
 import { ReactComponent as ConnectImg } from '../../../assets/images/icons/connect.svg';
-import BidsHistory from '../../../components/BidHistory/index';
 import AlertMessage from '../../../ui-kit/AlertMessage/index';
 import CustomAddonInput from '../../../ui-kit/CustomField/AddonInput/index';
 import DateTimer from '../../../ui-kit/DateTimer';
@@ -28,44 +26,48 @@ import Error from '../../../ui-kit/Error/index';
 import * as RoutePaths from '../../../utils/constants/routings';
 import {
   AUCTION_TYPE,
+  CREATOR,
   FIX_TYPE,
   marketplaceContractAddress,
+  minStep,
   nullAddress,
+  rpcUrl,
   TokenSaleStatus,
-  TOKEN_NAME,
+  TOKEN_NAME
 } from '../../../utils/constants/variables';
 import UserContext from '../../../utils/contexts/User';
 import {
   buyToken,
   claimToken,
+  getNFTClaimed,
+  getNFTOwners,
   getOwnerAddress,
   getPastBids,
   listenBid,
   makeBid,
   returnToken,
-  stopListing,
+  stopListing
 } from '../../../utils/contractsApi/token';
+import { shortAddress } from '../../../utils/helper';
 import { ipfsUrl } from '../../../utils/ipfs';
 import { getTokenInfo } from '../../../utils/requestApi/token';
 import { metamaskEnabled } from '../../../utils/web3Utils';
 import { StatWrapper } from '../styled-ui';
+import NFTHistory from './history';
 import ModalTokenInfo from './modal_token_info';
+import NFT from './nft';
 import TokenDetailsSkeleton from './skeleton';
 import TransferToken from './transfer';
 import BidSchema from './validation';
 
-const minStep = 1000;
-
 const NftDetails = () => {
   let history = useHistory();
-  const location = useLocation();
   const { address } = useParams();
   const data = React.useContext(UserContext);
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [loading, setLoading] = useState(false);
   const [stopListingLoading, setStopListingLoading] = useState(false);
-  const [imageLoaded, setImageLoaded] = useState(false);
-  const [imageError, setImageError] = useState(false);
+
   const [formData, setFormData] = useState('');
   const [error, setError] = useState();
   const toast = useToast();
@@ -95,12 +97,13 @@ const NftDetails = () => {
 
   const [pastEvents, setPastEvents] = useState([]);
   const [ownerAddress, setOwnerAddress] = useState('');
+  const [NFTOwners, setNFTOwners] = useState([]);
   const [isStartSelling, setStartSelling] = useState(false);
   const [highestBid, setHighestBid] = useState(0);
   const queryParams = address.split(':');
   const collectionAddress = queryParams[0];
   const tokenId = queryParams[1];
-  const web3 = new Web3('https://evm.moonrabbit.com');
+  const web3 = new Web3(rpcUrl);
 
   const handleBuyToken = async () => {
     setLoading(true);
@@ -142,7 +145,7 @@ const NftDetails = () => {
     setHighestBid(formData.values.bid);
     succesTransactionToast();
     getTokenInfoData();
-    setMinimalBid(minStep + web3.utils.fromWei(minimalBid));
+    setMinimalBid(minStep + web3.utils.fromWei(minimalBid.toString()));
   };
 
   useEffect(() => {
@@ -176,6 +179,8 @@ const NftDetails = () => {
         IsExternal,
         ListingStatus,
         OriginSpaceName,
+        AnimationURI,
+        CachedAnimationImage,
       } = result;
       setHighestBid(web3.utils.fromWei(LastBid));
       if (window.ethereum) {
@@ -188,11 +193,13 @@ const NftDetails = () => {
         marketplaceName: OriginSpaceName,
         description: Description,
         collectionAddress: CollectionId,
-        imageUrl: ipfsUrl + ImageURI,
+        imageUrl: CachedImage ? CachedImage : ipfsUrl + ImageURI.replace('ipfs://', ''),
         cachedImageUrl: CachedImage,
         listingStatus: ListingStatus,
         collectionName: Collection.Name,
         claimer: Claimer,
+        animationURI: AnimationURI,
+        cachedAnimationImage: CachedAnimationImage,
         action: Action,
         owner: Owner,
         minimalBid: MinimalBid,
@@ -216,7 +223,71 @@ const NftDetails = () => {
           ? parseInt(minStep) + parseInt(web3.utils.fromWei(LastBid))
           : parseInt(minStep) + parseInt(web3.utils.fromWei(MinimalBid))
       );
+      getNFTOwnersList(CollectionId, CreatorAddress);
     });
+
+  const getTransactionDate = async (blockNumber) => {
+    const time = await web3.eth.getBlock(blockNumber);
+    return time;
+  };
+
+  const getNFTOwnersList = async (collectionAddress, creator) => {
+    let owners = [];
+
+    if (creator !== nullAddress && creator !== '') {
+      owners.push({
+        address: creator,
+        amount: '',
+        blockNumber: '',
+        type: CREATOR,
+        timestamp: '',
+      });
+    }
+
+    const nftOwners = await getNFTOwners({
+      collectionAddress: collectionAddress,
+      tokenId,
+      setError: (e) => {
+        setError(e);
+      },
+    });
+
+    const clamedNFTList = await getNFTClaimed({
+      collectionAddress: collectionAddress,
+      tokenId,
+      setError: (e) => {
+        setError(e);
+      },
+    });
+
+    await Promise.all(
+      nftOwners.map(async (item) => {
+        const transactionInfo = await getTransactionDate(item.blockNumber);
+        owners.push({
+          address: item.returnValues.newOwner,
+          amount: web3.utils.fromWei(item.returnValues.payed),
+          blockNumber: item.blockNumber,
+          type: FIX_TYPE,
+          timestamp: moment.unix(transactionInfo.timestamp).format('MM.DD.YYYY HH:mm'),
+        });
+      })
+    );
+
+    await Promise.all(
+      clamedNFTList.map(async (item) => {
+        const transactionInfo = await getTransactionDate(item.blockNumber);
+        owners.push({
+          address: item.returnValues.newOwner,
+          amount: web3.utils.fromWei(item.returnValues.payed),
+          blockNumber: item.blockNumber,
+          type: AUCTION_TYPE,
+          timestamp: moment.unix(transactionInfo.timestamp).format('MM.DD.YYYY HH:mm'),
+        });
+      })
+    );
+
+    setNFTOwners(owners);
+  };
 
   useEffect(() => {
     if (data.contract) {
@@ -258,7 +329,10 @@ const NftDetails = () => {
       address: data.account.address,
       collectionAddress,
       tokenId,
-      setError,
+      setError: (e) => {
+        setError(e);
+        setLoading(false);
+      },
       cb: getTokenInfoData,
     });
     setLoading(false);
@@ -330,68 +404,22 @@ const NftDetails = () => {
             <meta name="description" content={tokenInfo.description} />
             <meta property="og:title" content={tokenInfo.name + ' Moon Rabbit NFT Marketplace'} />
             <meta property="og:description" content={tokenInfo.description} />
-
-            <meta
-              property="og:image"
-              content={
-                tokenInfo.cachedImageUrl !== ''
-                  ? encodeURI(tokenInfo.cachedImageUrl)
-                  : encodeURI(tokenInfo.imageUrl.replace('ipfs:/', ''))
-              }
-            />
-
-            <meta name="twitter:card" content="summary" />
-            <meta name="twitter:site" content="@moonrabbitaz" />
-            <meta name="twitter:title" content={tokenInfo.name + ' Moon Rabbit NFT Marketplace'} />
-            <meta name="twitter:description" content={tokenInfo.description} />
-            <meta
-              name="twitter:image"
-              content={
-                tokenInfo.cachedImageUrl !== ''
-                  ? encodeURI(tokenInfo.cachedImageUrl)
-                  : encodeURI(tokenInfo.imageUrl.replace('ipfs:/', ''))
-              }
-            />
           </Helmet>
           <Box maxWidth="1536px" m="0 auto" padding="60px 40px 180px 40px">
             <SimpleGrid
               columns={{ md: 'auto', lg: 2 }}
               columnGap={28}
               rowGap={10}
-              display={{ base: 'block', lg: imageLoaded ? 'grid' : 'none' }}
+              // display={{ base: 'block', lg: imageLoaded ? 'grid' : 'none' }}
             >
-              {((!imageLoaded && location.state && !location.state.imageUrl !== null) || imageError) && (
-                <Skeleton h="600px" w="600px" borderRadius="4px" justifySelf="center" />
-              )}
-              <Box
-                maxH="600px"
-                display={imageLoaded ? 'grid' : 'none'}
-                cursor="pointer"
-                onClick={onOpen}
-                borderRadius="4px"
-                justifySelf="center"
-              >
-                <Image
-                  maxH="600px"
-                  name={tokenInfo.name}
-                  onLoad={() => setImageLoaded(true)}
-                  onError={() => setImageError(true)}
-                  src={
-                    location.state && location.state.imageUrl !== null
-                      ? location.state.imageUrl
-                      : tokenInfo.cachedImageUrl !== ''
-                      ? encodeURI(tokenInfo.cachedImageUrl)
-                      : encodeURI(tokenInfo.imageUrl.replace('ipfs:/', ''))
-                  }
-                />
-              </Box>
+              <NFT onOpen={onOpen} tokenInfo={tokenInfo} />
               <Flex flexDirection="column">
                 <Heading color="white" pb="16px" pt={{ base: 4, lg: 0 }}>
                   {tokenInfo.name}
                 </Heading>
                 <Flex flexWrap="wrap" gridColumnGap={2}>
                   <Box bgColor="teal.200" placeSelf="flex-start" borderRadius="6px" pt={1} pb={1} pr={2} pl={2} mb={2}>
-                    <Text
+                    <chakra.span
                       cursor="pointer"
                       size="md"
                       color="black"
@@ -399,11 +427,11 @@ const NftDetails = () => {
                       onClick={() => handleClickCollection()}
                     >
                       From {!tokenInfo.isExternal ? `"${tokenInfo.collectionName}"` : 'external'} collection
-                    </Text>
+                    </chakra.span>
                   </Box>
                   {tokenInfo.royalties && (
                     <Box bgColor="gray.400" placeSelf="flex-start" borderRadius="6px" pt={1} pb={1} pr={2} pl={2}>
-                      <Text
+                      <chakra.span
                         cursor="pointer"
                         size="md"
                         color="white"
@@ -411,7 +439,7 @@ const NftDetails = () => {
                         onClick={() => handleClickCollection()}
                       >
                         Royalties {web3.utils.fromWei((parseInt(tokenInfo.royalties) * 100).toString())}%
-                      </Text>
+                      </chakra.span>
                     </Box>
                   )}
                 </Flex>
@@ -423,17 +451,23 @@ const NftDetails = () => {
                     pt={4}
                     cursor="pointer"
                     onClick={() =>
-                      history.push(
-                        `${RoutePaths.PROFILE_PAGE}/${
+                      history.push({
+                        pathname: `${RoutePaths.PROFILE_PAGE}/${
                           tokenInfo.owner === marketplaceContractAddress
                             ? tokenInfo.listingInfo.creator
                             : tokenInfo.owner
-                        }`
-                      )
+                        }`,
+                        state: {
+                          tab: 'nfts',
+                          page: 'home',
+                        },
+                      })
                     }
                   >
                     Owner:{' '}
-                    {tokenInfo.owner === marketplaceContractAddress ? tokenInfo.listingInfo.creator : tokenInfo.owner}
+                    {tokenInfo.owner === marketplaceContractAddress
+                      ? shortAddress(tokenInfo.listingInfo.creator)
+                      : shortAddress(tokenInfo.owner)}
                   </Text>
                 )}
 
@@ -474,7 +508,10 @@ const NftDetails = () => {
                 {tokenInfo.listingInfo.listingType === FIX_TYPE &&
                   (tokenInfo.listingStatus === TokenSaleStatus.SALE ||
                     tokenInfo.listingStatus === TokenSaleStatus.SECONDARY_MARKET) && (
-                    <Flex alignItems="center">
+                    <Flex
+                      alignItems={{ base: 'start', lg: 'center' }}
+                      flexFlow={{ base: 'column wrap', lg: 'row wrap' }}
+                    >
                       {moment() > moment(moment.unix(tokenInfo.listingInfo.timeStart).toDate()) && (
                         <>
                           {window.ethereum ? (
@@ -511,6 +548,7 @@ const NftDetails = () => {
                           disabled={stopListingLoading}
                           loadingText=" Stopping..."
                           onClick={() => handleStopListing()}
+                          mt={{ base: 2, lg: 0 }}
                         >
                           Stop Listing
                         </Button>
@@ -739,23 +777,12 @@ const NftDetails = () => {
                     </Flex>
                   )}
 
-                {(!process.env.NODE_ENV || process.env.NODE_ENV === 'development') && (
-                  <Box pt={4} color="white">
-                    <Text>Creator: {tokenInfo.listingInfo.creator}</Text>
-                    <Text>Owner: {tokenInfo.owner}</Text>
-                    {tokenInfo.claimer && <Text>Claimer: {tokenInfo.claimer}</Text>}
-                    {tokenInfo.action && <Text>Action: {tokenInfo.action}</Text>}
-                  </Box>
-                )}
-
-                {tokenInfo.listingInfo.listingType === AUCTION_TYPE && pastEvents && pastEvents.length > 0 && (
-                  <Box pt={4}>
-                    <BidsHistory
-                      bidsProps={pastEvents.sort((a, b) => b.blockNumber - a.blockNumber)}
-                      account={data.account.address}
-                    />
-                  </Box>
-                )}
+                <NFTHistory
+                  NFTOwners={NFTOwners}
+                  data={data}
+                  pastEvents={pastEvents}
+                  tokenInfo={tokenInfo}
+                ></NFTHistory>
               </Flex>
             </SimpleGrid>
           </Box>

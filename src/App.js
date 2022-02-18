@@ -3,9 +3,10 @@ import { Button, Flex } from '@chakra-ui/react';
 import React, { useEffect, useState } from 'react';
 import { ReactComponent as ConnectImg } from './assets/images/icons/connect.svg';
 import Loading from './components/Loader';
+import Maintenance from './pages/Maintenance/index';
 import Routings from './routing';
 import WrongNetworkModal from './ui-kit/WrongNetworkModal/index';
-import { chainId } from './utils/constants/variables';
+import { chainId, isMaintenance } from './utils/constants/variables';
 import UserContext from './utils/contexts/User';
 import { createContract, getActiveAccount, getEthBalance, initWeb3, metamaskEnabled } from './utils/web3Utils';
 
@@ -66,6 +67,8 @@ const App = () => {
     });
     setLoading(false);
   }, []);
+
+  if(isMaintenance) return <Maintenance />;
 
   return (
     <>

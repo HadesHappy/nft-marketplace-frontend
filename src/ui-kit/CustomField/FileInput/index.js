@@ -15,7 +15,7 @@ import {
 } from './styled-ui';
 
 const CustomFileInput = (props) => {
-  const { field, form, accept, label, actionText, maxFiles } = props;
+  const { field, form, accept, label, actionText, maxFiles, labelTypes, onChange } = props;
   const { name } = field;
 
   const error = getIn(form.errors, name);
@@ -37,6 +37,9 @@ const CustomFileInput = (props) => {
 
       setFiles(files.concat(filesUpload));
       form.setFieldValue(field.name, files.concat(filesUpload));
+      if (onChange) {
+        onChange(filesUpload);
+      }
     },
   });
 
@@ -79,7 +82,7 @@ const CustomFileInput = (props) => {
                 {actionText ?? 'Click to upload file'}{' '}
               </Text>
             </Upload>
-            <Text align="center">JPG, JPEG, PNG, GIF, WEBP. Max 100mb.</Text>
+            <Text align="center">{labelTypes ? labelTypes : 'JPG, JPEG, PNG, GIF, WEBP, MP4. Max 100mb.'}</Text>
           </WrapInfo>
 
           <ThumbsContainer>{thumbs}</ThumbsContainer>

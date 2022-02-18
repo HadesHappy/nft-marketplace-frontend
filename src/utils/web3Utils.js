@@ -1,13 +1,13 @@
 import Web3 from 'web3';
 import marketplaceERC721xJsonDev from '../abis/dev/ERC721Marketplace.json';
 import marketplaceJsonDev from '../abis/dev/Marketplace.json';
-import { marketplaceContractAddress } from './constants/variables';
+import { marketplaceContractAddress, rpcUrl } from './constants/variables';
 
 export const initWeb3 = async () => {
   if (window.ethereum) {
     return new Web3(window.ethereum);
   } else {
-    return new Web3('https://evm.moonrabbit.com');
+    return new Web3(rpcUrl);
   }
 };
 
@@ -48,7 +48,7 @@ export const createContract = () => {
     const web3 = new Web3(window.ethereum);
     return new web3.eth.Contract(getContractAbi().marketplaceJson.abi, marketplaceContractAddress);
   } else {
-    const web3 = new Web3('https://evm.moonrabbit.com');
+    const web3 = new Web3(rpcUrl);
     return new web3.eth.Contract(getContractAbi().marketplaceJson.abi, marketplaceContractAddress);
   }
 };

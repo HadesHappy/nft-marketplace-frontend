@@ -122,7 +122,7 @@ const NftResell = () => {
       state: {
         imageUrl: tokenInfo.cachedImage
           ? encodeURI(tokenInfo.cachedImage)
-          : encodeURI(`${ipfsUrl}${tokenInfo.ImageURI.replace('ipfs:/', '')}`),
+          : encodeURI(`${ipfsUrl}${tokenInfo.ImageURI.replace('ipfs://', '')}`),
       },
     });
   };
@@ -195,6 +195,10 @@ const NftResell = () => {
           setAllowanceNft(true);
           succesTransactionToast();
           setLoading(false);
+        })
+        .on('error', (error) => {
+          setError(error.message);
+          setLoading(false);
         });
     }
   };
@@ -239,7 +243,11 @@ const NftResell = () => {
                     {tokenInfo.imageUrl || tokenInfo.cachedImage ? (
                       <UploadedCoverWrapper>
                         <UploadedCoverImageFullSize
-                          src={tokenInfo.cachedImage ? encodeURI(tokenInfo.cachedImage) : encodeURI(tokenInfo.imageUrl.replace('ipfs:/', ''))}
+                          src={
+                            tokenInfo.cachedImage
+                              ? encodeURI(tokenInfo.cachedImage)
+                              : encodeURI(tokenInfo.imageUrl.replace('ipfs://', ''))
+                          }
                         />
                       </UploadedCoverWrapper>
                     ) : (
@@ -337,6 +345,7 @@ const NftResell = () => {
                       bg="teal.200"
                       size="lg"
                       colorScheme="teal.200"
+                      color="black"
                       isLoading={loading}
                       loadingText="Approving NFT"
                       onClick={() => approveNft()}
@@ -347,6 +356,7 @@ const NftResell = () => {
                     <Button
                       id="createNFT"
                       type="submit"
+                      color="black"
                       disabled={isSubmitting}
                       variant="solid"
                       bg="teal.200"

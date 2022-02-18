@@ -8,6 +8,14 @@ export const NftSchema = yup.object().shape({
     .max(400, 'Maximum of 400 characters')
     .required('Required'),
   isPublishNow: yup.boolean(),
+  isVideoNFT: yup.boolean(),
+  nftCover: yup.array().when('isVideoNFT', {
+    is: true,
+    // .test('len', 'Required', (val) => val.length > 0)
+    then: yup.array().required('Required'),
+  }),
+  nftError: yup.boolean().oneOf([false], 'Incorrect file.'),
+
   price: yup.number().when('isPublishNow', {
     is: true,
     then: yup.number().required('Required').moreThan(0),

@@ -17,3 +17,7 @@ export const getDuration = (startDate, endDate) => {
   const endDateUnix = moment.utc(endDate).unix();
   return (endDateUnix - startDateUnix).toString();
 };
+
+export const getExtension = (name) => {
+  return name.match(/\.([^.]+)$/)?.[1];
+};

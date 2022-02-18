@@ -4,20 +4,16 @@ import { backendUrl } from '../constants/variables';
 
 const limit = 9;
 
-export default function useSearch({ sort, query, pageNumber, onChange }) {
+export function useSearchNFT({ sort, query, pageNumber, onChange }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
   const [tokens, setTokens] = useState([]);
-  const [collections, setCollections] = useState([]);
   const [tokenCount, setTokenCount] = useState(0);
-  const [collectionCount, setCollectionCount] = useState(0);
   const [hasMore, setHasMore] = useState(false);
 
   useEffect(() => {
     setTokens([]);
-    setCollections([]);
     setTokenCount(0);
-    setCollectionCount(0);
     onChange();
   }, [query, sort]);
 
@@ -25,30 +21,28 @@ export default function useSearch({ sort, query, pageNumber, onChange }) {
     setLoading(true);
     setError(false);
     let cancel;
+
+    // const type = 'nfts';
+    // const type = "collections";
     axios({
       method: 'GET',
-      url: `${backendUrl}search/`,
+      url: `${backendUrl}search-nfts/`,
       params: { sort: sort || '', query: query || '', limit: limit, offset: (pageNumber - 1) * limit },
       cancelToken: new axios.CancelToken((c) => (cancel = c)),
     })
       .then((res) => {
-        if (res.data.Nfts.Nfts.length > 0 || res.data.Collections.Collections.length > 0) {
+        if (res.data.Nfts.length > 0) {
           if (pageNumber <= 1) {
-            setTokenCount(res.data.Nfts.Count);
+            setTokenCount(res.data.Count);
           }
-
-          setCollectionCount(res.data.Collections.Count);
           setTokens((prevTokens) => {
-            return [...new Set([...prevTokens, ...res.data.Nfts.Nfts])];
+            return [...new Set([...prevTokens, ...res.data.Nfts])];
           });
-          setCollections((prevCollections) => {
-            return [...new Set([...prevCollections, ...res.data.Collections.Collections])];
-          });
-
           setHasMore(true);
         } else {
           setHasMore(false);
         }
+
         setLoading(false);
       })
       .catch((e) => {
@@ -58,5 +52,54 @@ export default function useSearch({ sort, query, pageNumber, onChange }) {
     return () => cancel();
   }, [query, pageNumber, sort]);
 
-  return { loading, collections, tokenCount, collectionCount, error, tokens, hasMore };
+  return { loading, tokenCount, error, tokens, hasMore };
+}
+
+export function useSearchCollection({ sort, query, pageNumber, onChange }) {
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
+  const [collections, setCollections] = useState([]);
+  const [collectionCount, setCollectionCount] = useState(0);
+  const [hasMore, setHasMore] = useState(false);
+
+  useEffect(() => {
+    setCollections([]);
+    setCollectionCount(0);
+    onChange();
+  }, [query, sort]);
+
+  useEffect(() => {
+    setLoading(true);
+    setError(false);
+    let cancel;
+
+    // const type = 'nfts';
+    // const type = "collections";
+    axios({
+      method: 'GET',
+      url: `${backendUrl}search-collections/`,
+      params: { sort: sort || '', query: query || '', limit: limit, offset: (pageNumber - 1) * limit },
+      cancelToken: new axios.CancelToken((c) => (cancel = c)),
+    })
+      .then((res) => {
+        if (res.data.Collections.length > 0) {
+          setCollectionCount(res.data.Count);
+          setCollections((prevCollections) => {
+            return [...new Set([...prevCollections, ...res.data.Collections])];
+          });
+          setHasMore(true);
+        } else {
+          setHasMore(false);
+        }
+
+        setLoading(false);
+      })
+      .catch((e) => {
+        if (axios.isCancel(e)) return;
+        setError(true);
+      });
+    return () => cancel();
+  }, [query, pageNumber, sort]);
+
+  return { loading, collections, collectionCount, error, hasMore };
 }

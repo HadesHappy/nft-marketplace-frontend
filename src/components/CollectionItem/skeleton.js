@@ -1,28 +1,35 @@
-import { SimpleGrid, Skeleton } from '@chakra-ui/react';
-import { Tab, TabList, TabPanel, TabPanels, Tabs } from '@chakra-ui/tabs';
+import { Box, Center, Flex, Skeleton, SkeletonCircle, Stack } from '@chakra-ui/react';
 import React from 'react';
-import Token from '../../components/Token/index';
 
-const TokensSkeleton = () => {
+const CollectionSkeleton = () => {
   return (
-    <Tabs isLazy colorScheme="teal.200" color="white">
-      <TabList>
-        <Tab color="teal.200">
-          <Skeleton height="20px" />
-        </Tab>
-      </TabList>
+    <Center pt={6}>
+      <Box position="relative" maxW={'448px'} w={'full'} cursor="pointer">
+        <Skeleton loading="lazy" bgSize="cover" h={100} />
 
-      <TabPanels>
-        <TabPanel p={0}>
-          <SimpleGrid columns={[1, 2, 3]} gridColumnGap={6} gridRowGap={3} pb="0">
-            <Token></Token>
-            <Token></Token>
-            <Token></Token>
-          </SimpleGrid>
-        </TabPanel>
-      </TabPanels>
-    </Tabs>
+        <Flex position="absolute" bottom={90} w={'full'} justifyContent="center ">
+          <SkeletonCircle size="24" opacity="1" />
+        </Flex>
+        <Box
+          backgroundColor={'#272B2A'}
+          color="white"
+          rounded={'md'}
+          p={6}
+          overflow={'hidden'}
+          _hover={{
+            boxShadow: '2xl',
+          }}
+          pt={8}
+          cursor="pointer"
+        >
+          <Stack alignItems="center">
+            <Skeleton height="25px" width="sm" pt={5} />
+            <Skeleton height="25px" width="xs" pt={5} />
+          </Stack>
+        </Box>
+      </Box>
+    </Center>
   );
 };
 
-export default TokensSkeleton;
+export default CollectionSkeleton;
