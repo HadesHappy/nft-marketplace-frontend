@@ -1,3 +1,4 @@
+import { Center, Wrap } from '@chakra-ui/layout';
 import {
   Box,
   Button,
@@ -9,7 +10,8 @@ import {
   StatLabel,
   StatNumber,
   Text,
-  useDisclosure
+  useDisclosure,
+  WrapItem,
 } from '@chakra-ui/react';
 import { useToast } from '@chakra-ui/toast';
 import { Field, Form, Formik } from 'formik';
@@ -33,7 +35,7 @@ import {
   nullAddress,
   rpcUrl,
   TokenSaleStatus,
-  TOKEN_NAME
+  TOKEN_NAME,
 } from '../../../utils/constants/variables';
 import UserContext from '../../../utils/contexts/User';
 import {
@@ -46,10 +48,10 @@ import {
   listenBid,
   makeBid,
   returnToken,
-  stopListing
+  stopListing,
 } from '../../../utils/contractsApi/token';
 import { shortAddress } from '../../../utils/helper';
-import { ipfsUrl } from '../../../utils/ipfs';
+import { getFile, ipfsUrl } from '../../../utils/ipfs';
 import { getTokenInfo } from '../../../utils/requestApi/token';
 import { metamaskEnabled } from '../../../utils/web3Utils';
 import { StatWrapper } from '../styled-ui';
@@ -69,6 +71,7 @@ const NftDetails = () => {
   const [stopListingLoading, setStopListingLoading] = useState(false);
 
   const [formData, setFormData] = useState('');
+  const [attributes, setAttributes] = useState('');
   const [error, setError] = useState();
   const toast = useToast();
   const [minimalBid, setMinimalBid] = useState(0);
@@ -224,6 +227,9 @@ const NftDetails = () => {
           : parseInt(minStep) + parseInt(web3.utils.fromWei(MinimalBid))
       );
       getNFTOwnersList(CollectionId, CreatorAddress);
+      if (IsExternal) {
+        getRabbitAttributes();
+      }
     });
 
   const getTransactionDate = async (blockNumber) => {
@@ -374,6 +380,15 @@ const NftDetails = () => {
       getOwner();
     }
   }, []);
+
+  const getRabbitAttributes = async () => {
+    const folder = 'QmbRQGGURkKGvrNKYmGHSscrosB3gDtR7F3JGTXPxVUzm8';
+    const metadata = getFile(folder + '/' + tokenId).then((result) => {
+      console.log('attributes', result.attributes);
+      setAttributes(result.attributes);
+    });
+    console.log('metadata', metadata);
+  };
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -776,6 +791,41 @@ const NftDetails = () => {
                       </Button>
                     </Flex>
                   )}
+
+                {attributes && (
+                  <Box pt={4} fontWeight="bold" color="gray.500" fontSize={16}>
+                    Properties
+                    <Box pt={2}>
+                      <Wrap>
+                        {attributes.map((item) => (
+                          <WrapItem>
+                            <Center w="180px" h="80px" border="1px solid #ccc" borderRadius={6}>
+                              <Flex flexFlow="column" gridGap={1} alignItems={'center'}>
+                                <Text
+                                  color="white"
+                                  overflow={'hidden'}
+                                  maxWidth={'160px'}
+                                  whiteSpace="nowrap"
+                                  textOverflow="ellipsis"
+                                >
+                                  {item.trait_type}
+                                </Text>
+                                <Text
+                                  overflow={'hidden'}
+                                  maxWidth={'160px'}
+                                  whiteSpace="nowrap"
+                                  textOverflow="ellipsis"
+                                >
+                                  {item.value}
+                                </Text>
+                              </Flex>
+                            </Center>
+                          </WrapItem>
+                        ))}
+                      </Wrap>
+                    </Box>
+                  </Box>
+                )}
 
                 <NFTHistory
                   NFTOwners={NFTOwners}

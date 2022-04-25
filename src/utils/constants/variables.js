@@ -9,7 +9,6 @@ export const minStep = 1000;
 export const rpcUrl = 'https://evm.moonrabbit.com';
 
 export const nullAddress = '0x0000000000000000000000000000000000000000';
-
 export const AUCTION_TYPE = 'Auction';
 export const FIX_TYPE = 'FixedPrice';
 
