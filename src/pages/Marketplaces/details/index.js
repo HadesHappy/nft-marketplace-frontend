@@ -26,7 +26,6 @@ const MarketplaceDetails = () => {
   const [query, setQuery] = useState('');
   const [nftType, setNftType] = useState('');
   const [pageNumber, setPageNumber] = useState(1);
-  console.log('ok');
   const handleSortMenu = async (value) => {
     setQuery(value);
     setPageNumber(1);
