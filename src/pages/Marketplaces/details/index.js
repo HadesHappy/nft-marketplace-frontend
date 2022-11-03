@@ -19,7 +19,6 @@ import '../slider/css/style.css';
 import { Description, Title } from '../styled-ui';
 
 const MarketplaceDetails = () => {
-  console.log('ok');
   let history = useHistory();
   const location = useLocation();
   const { address } = useParams();
